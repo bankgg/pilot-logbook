@@ -16,10 +16,35 @@ const LogFlightSchema = z.object({
   aircraft_type: z.string().min(1, 'Aircraft type is required'),
   dep_airport: z.string().length(4, 'Departure airport must be a 4-character ICAO code').toUpperCase(),
   arr_airport: z.string().length(4, 'Arrival airport must be a 4-character ICAO code').toUpperCase(),
-  block_off: z.string().datetime().nullable().optional(),
-  takeoff: z.string().datetime().nullable().optional(),
-  landing: z.string().datetime().nullable().optional(),
-  block_on: z.string().datetime().nullable().optional(),
+  block_off: z.preprocess((val) => {
+    if (val === '' || val === undefined || val === null) return null
+    // Convert +00:00 timezone offset to Z for Zod datetime validation
+    if (typeof val === 'string' && val.includes('+00:00')) {
+      return val.replace('+00:00', 'Z')
+    }
+    return val
+  }, z.string().datetime().nullable().optional()),
+  takeoff: z.preprocess((val) => {
+    if (val === '' || val === undefined || val === null) return null
+    if (typeof val === 'string' && val.includes('+00:00')) {
+      return val.replace('+00:00', 'Z')
+    }
+    return val
+  }, z.string().datetime().nullable().optional()),
+  landing: z.preprocess((val) => {
+    if (val === '' || val === undefined || val === null) return null
+    if (typeof val === 'string' && val.includes('+00:00')) {
+      return val.replace('+00:00', 'Z')
+    }
+    return val
+  }, z.string().datetime().nullable().optional()),
+  block_on: z.preprocess((val) => {
+    if (val === '' || val === undefined || val === null) return null
+    if (typeof val === 'string' && val.includes('+00:00')) {
+      return val.replace('+00:00', 'Z')
+    }
+    return val
+  }, z.string().datetime().nullable().optional()),
   day_landings: z.number().int().min(0).default(0),
   night_landings: z.number().int().min(0).default(0),
   notes: z.string().optional(),
@@ -258,6 +283,75 @@ export async function searchAirports(query: string): Promise<{
   if (error) {
     return { success: false, error: error.message }
   }
+
+  return { success: true, data }
+}
+
+/**
+ * Update a flight (only if owned by current user)
+ */
+export async function updateFlight(
+  flightId: string,
+  input: LogFlightInput
+): Promise<{
+  success: boolean
+  data?: Flight
+  error?: string
+}> {
+  // Debug: log input to see what we're receiving
+  console.log('updateFlight received:', JSON.stringify(input, null, 2))
+
+  // Validate input
+  const validated = LogFlightSchema.parse(input)
+
+  // Get the current user (cached)
+  const user = await getAuthenticatedUser()
+  if (!user) {
+    return { success: false, error: 'Authentication required' }
+  }
+
+  const supabase = await createClient()
+
+  // Calculate durations
+  const duration_block = calculateDuration(
+    validated.block_off ?? null,
+    validated.block_on ?? null
+  )
+  const duration_flight = calculateDuration(
+    validated.takeoff ?? null,
+    validated.landing ?? null
+  )
+
+  // Update flight
+  const { data, error } = await (supabase.from('flights') as any)
+    .update({
+      flight_number: validated.flight_number ?? null,
+      aircraft_reg: validated.aircraft_reg,
+      aircraft_type: validated.aircraft_type,
+      dep_airport: validated.dep_airport,
+      arr_airport: validated.arr_airport,
+      block_off: validated.block_off ?? null,
+      takeoff: validated.takeoff ?? null,
+      landing: validated.landing ?? null,
+      block_on: validated.block_on ?? null,
+      duration_block,
+      duration_flight,
+      day_landings: validated.day_landings,
+      night_landings: validated.night_landings,
+      notes: validated.notes ?? null,
+    })
+    .eq('id', flightId)
+    .eq('user_id', user.id)
+    .select()
+    .single()
+
+  if (error) {
+    return { success: false, error: error.message }
+  }
+
+  // Revalidate dashboard and home page
+  revalidatePath('/dashboard')
+  revalidatePath('/')
 
   return { success: true, data }
 }

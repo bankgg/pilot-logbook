@@ -1,8 +1,9 @@
 import { getFlights } from '@/lib/actions/flights'
 import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent } from '@/components/ui/card'
-import { Plane, ArrowLeft } from 'lucide-react'
+import { Plane, ArrowLeft, LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { ThemeToggle } from '@/components/theme-toggle'
 import Link from 'next/link'
 import { DashboardContent } from '@/components/dashboard-content'
 
@@ -40,25 +41,32 @@ export default async function DashboardPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b bg-card/50 backdrop-blur supports-[backdrop-filter]:bg-card/50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="outline" size="sm" asChild>
-              <Link href="/">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Home
-              </Link>
-            </Button>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <Plane className="h-6 w-6" />
-              Flight Log Dashboard
-            </h1>
+      <header className="border-b bg-card/50 backdrop-blur supports-[backdrop-filter]:bg-card/50 sticky top-0 z-10">
+        <div className="container mx-auto px-3 py-3">
+          <div className="flex items-center justify-between gap-2">
+            {/* Left: Back button + Title */}
+            <div className="flex items-center gap-2 min-w-0">
+              <Button variant="outline" size="sm" className="shrink-0" asChild>
+                <Link href="/" aria-label="Go home">
+                  <ArrowLeft className="h-4 w-4" />
+                </Link>
+              </Button>
+              <h1 className="text-lg sm:text-xl font-bold flex items-center gap-1.5 truncate">
+                <Plane className="h-5 w-5 shrink-0" />
+                <span className="hidden sm:inline">Flight Log Dashboard</span>
+                <span className="sm:hidden">Dashboard</span>
+              </h1>
+            </div>
+            {/* Right: Theme toggle + Sign out */}
+            <div className="flex items-center gap-1 shrink-0">
+              <ThemeToggle />
+              <form action={signOut}>
+                <Button variant="outline" size="sm" className="shrink-0" type="submit" aria-label="Sign out">
+                  <LogOut className="h-4 w-4" />
+                </Button>
+              </form>
+            </div>
           </div>
-          <form action={signOut}>
-            <Button variant="outline" size="sm" type="submit">
-              Sign Out
-            </Button>
-          </form>
         </div>
       </header>
 
