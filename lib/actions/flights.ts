@@ -206,7 +206,36 @@ export async function getAirportByIcao(icao: string): Promise<{
 }
 
 /**
+ * Get all airports (for client-side caching and filtering)
+ * Returns all airports with essential fields for autocomplete
+ * Server-side cached for 1 day using React.cache()
+ */
+const fetchAllAirportsFromDb = cache(async () => {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from('airports')
+    .select('*')
+    .order('icao', { ascending: true })
+
+  if (error) {
+    return { success: false, error: error.message } as const
+  }
+
+  return { success: true, data } as const
+})
+
+export async function getAllAirports(): Promise<{
+  success: boolean
+  data?: Airport[]
+  error?: string
+}> {
+  return fetchAllAirportsFromDb()
+}
+
+/**
  * Search airports by ICAO or name (for autocomplete)
+ * @deprecated Use getAllAirports with client-side filtering instead
  */
 export async function searchAirports(query: string): Promise<{
   success: boolean

@@ -3,6 +3,7 @@ import { FlightMapWrapper } from '@/components/flight-map-wrapper'
 import { AuthSignIn } from '@/components/auth-signin'
 import { StatsSection } from '@/components/stats-section'
 import { RecentFlights } from '@/components/recent-flights'
+import { AirportPreloader } from '@/components/airport-preloader'
 import { getFlightPaths, getFlightStats } from '@/lib/actions/flights'
 import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -37,6 +38,9 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Preload airports for better UX */}
+      <AirportPreloader />
+
       {/* Header */}
       <header className="border-b bg-card/50 backdrop-blur supports-[backdrop-filter]:bg-card/50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">

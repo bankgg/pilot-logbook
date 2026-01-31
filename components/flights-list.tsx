@@ -115,8 +115,8 @@ export function FlightsList({ flights, onDelete }: FlightsListProps) {
                     )}
                   </div>
                 </td>
-                <td className="p-3 max-w-xs truncate text-muted-foreground">
-                  {flight.notes || '-'}
+                <td className="p-3 max-w-xs text-muted-foreground">
+                  <p className="line-clamp-2 whitespace-pre-wrap">{flight.notes || '-'}</p>
                 </td>
               </tr>
             ))}

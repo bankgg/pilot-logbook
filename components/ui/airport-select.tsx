@@ -17,7 +17,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
-import { searchAirports } from '@/lib/actions/flights'
+import { getCachedAirports, filterAirports } from '@/lib/utils/airport-cache'
 import type { Airport } from '@/types/supabase'
 
 interface AirportSelectProps {
@@ -28,31 +28,30 @@ interface AirportSelectProps {
 
 export function AirportSelect({ value, onChange, placeholder = 'Select airport...' }: AirportSelectProps) {
   const [open, setOpen] = React.useState(false)
-  const [airports, setAirports] = React.useState<Airport[]>([])
+  const [allAirports, setAllAirports] = React.useState<Airport[]>([])
+  const [filteredAirports, setFilteredAirports] = React.useState<Airport[]>([])
   const [search, setSearch] = React.useState('')
-  const [loading, setLoading] = React.useState(false)
+  const [loading, setLoading] = React.useState(true)
 
-  // Fetch airports when search changes
+  // Fetch all airports on mount (uses cache if available)
   React.useEffect(() => {
-    const fetchAirports = async () => {
-      if (search.length < 2) {
-        setAirports([])
-        return
-      }
-
+    const loadAirports = async () => {
       setLoading(true)
-      const result = await searchAirports(search)
-      if (result.success && result.data) {
-        setAirports(result.data)
-      }
+      const airports = await getCachedAirports()
+      setAllAirports(airports)
       setLoading(false)
     }
 
-    const timeout = setTimeout(fetchAirports, 300)
-    return () => clearTimeout(timeout)
-  }, [search])
+    loadAirports()
+  }, [])
 
-  const selectedAirport = airports.find((a) => a.icao === value)
+  // Filter airports when search changes (client-side filtering)
+  React.useEffect(() => {
+    const filtered = filterAirports(allAirports, search)
+    setFilteredAirports(filtered)
+  }, [search, allAirports])
+
+  const selectedAirport = allAirports.find((a) => a.icao === value)
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -85,19 +84,19 @@ export function AirportSelect({ value, onChange, placeholder = 'Select airport..
               <div className="flex items-center justify-center py-6">
                 <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
               </div>
-            ) : airports.length === 0 ? (
+            ) : filteredAirports.length === 0 ? (
               <CommandEmpty>
                 {search.length < 2 ? 'Type at least 2 characters...' : 'No airports found.'}
               </CommandEmpty>
             ) : (
               <CommandGroup>
-                {airports.map((airport) => (
+                {filteredAirports.map((airport) => (
                   <CommandItem
                     key={airport.icao}
                     value={airport.icao}
                     keywords={[airport.icao, airport.iata || '', airport.name]}
                     onSelect={(currentValue) => {
-                      onChange(currentValue, airports.find((a) => a.icao === currentValue)?.name)
+                      onChange(currentValue, allAirports.find((a) => a.icao === currentValue)?.name)
                       setOpen(false)
                     }}
                   >
