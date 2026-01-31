@@ -22,7 +22,7 @@ import type { Airport } from '@/types/supabase'
 
 interface AirportSelectProps {
   value: string
-  onChange: (value: string, airportName?: string) => void
+  onChange: (value: string) => void
   placeholder?: string
 }
 
@@ -96,7 +96,7 @@ export function AirportSelect({ value, onChange, placeholder = 'Select airport..
                     value={airport.icao}
                     keywords={[airport.icao, airport.iata || '', airport.name]}
                     onSelect={(currentValue) => {
-                      onChange(currentValue, allAirports.find((a) => a.icao === currentValue)?.name)
+                      onChange(currentValue)
                       setOpen(false)
                     }}
                   >

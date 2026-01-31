@@ -56,7 +56,7 @@ export function FlightsList({ flights, onDelete }: FlightsListProps) {
             <tr className="border-b bg-muted/50">
               <th className="text-left p-3 font-semibold">Date</th>
               <th className="text-left p-3 font-semibold">Route</th>
-              <th className="text-left p-3 font-semibold">Flight #</th>
+              <th className="text-left p-3 font-semibold">Flight</th>
               <th className="text-left p-3 font-semibold">Aircraft</th>
               <th className="text-left p-3 font-semibold">Duration</th>
               <th className="text-left p-3 font-semibold">Landings</th>

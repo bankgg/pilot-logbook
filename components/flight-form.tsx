@@ -54,8 +54,6 @@ const formSchema = {
 
 export function FlightForm() {
   const [isSubmitting, setIsSubmitting] = React.useState(false)
-  const [depAirportName, setDepAirportName] = React.useState<string>()
-  const [arrAirportName, setArrAirportName] = React.useState<string>()
 
   const form = useForm<LogFlightInput>({
     defaultValues: formSchema,
@@ -86,8 +84,6 @@ export function FlightForm() {
       if (result.success) {
         toast.success('Flight logged successfully!')
         form.reset()
-        setDepAirportName(undefined)
-        setArrAirportName(undefined)
       } else {
         toast.error(result.error || 'Failed to log flight')
       }
@@ -168,16 +164,10 @@ export function FlightForm() {
                     <FormControl>
                       <AirportSelect
                         value={field.value}
-                        onChange={(val, name) => {
-                          field.onChange(val)
-                          setDepAirportName(name)
-                        }}
+                        onChange={field.onChange}
                         placeholder="Select departure..."
                       />
                     </FormControl>
-                    {depAirportName && (
-                      <p className="text-sm text-muted-foreground">{depAirportName}</p>
-                    )}
                     <FormMessage />
                   </FormItem>
                 )}
@@ -191,16 +181,10 @@ export function FlightForm() {
                     <FormControl>
                       <AirportSelect
                         value={field.value}
-                        onChange={(val, name) => {
-                          field.onChange(val)
-                          setArrAirportName(name)
-                        }}
+                        onChange={field.onChange}
                         placeholder="Select arrival..."
                       />
                     </FormControl>
-                    {arrAirportName && (
-                      <p className="text-sm text-muted-foreground">{arrAirportName}</p>
-                    )}
                     <FormMessage />
                   </FormItem>
                 )}

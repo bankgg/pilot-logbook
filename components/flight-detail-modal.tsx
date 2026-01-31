@@ -86,10 +86,10 @@ function formatDateTime(dateStr: string | null): string {
     month: 'short',
     year: '2-digit',
   })
-  const timePart = date.toLocaleTimeString('en-US', {
+  const timePart = date.toLocaleTimeString('en-GB', {
     hour: '2-digit',
     minute: '2-digit',
-    hour12: true,
+    hour12: false,
   })
   return `${datePart}, ${timePart}`
 }
@@ -169,7 +169,7 @@ function DateTimePicker({
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {field.value ? format(new Date(field.value), 'd MMM yy, p') : 'Pick date & time'}
+                    {field.value ? format(new Date(field.value), 'd MMM yy, HH:mm') : 'Pick date & time'}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
@@ -542,19 +542,10 @@ export function FlightDetailModal({ flightId, open, onOpenChange, onDelete, onUp
                           <FormControl>
                             <AirportSelect
                               value={field.value}
-                              onChange={(val, name) => {
-                                field.onChange(val)
-                                setDepAirportName(name)
-                              }}
+                              onChange={field.onChange}
                               placeholder="Select departure..."
                             />
                           </FormControl>
-                          {depAirportName && (
-                            <p className="text-sm text-muted-foreground">
-                              {depAirportName}
-                              {depAirportIata && <span> ({depAirportIata})</span>}
-                            </p>
-                          )}
                           <FormMessage />
                         </FormItem>
                       )}
@@ -568,19 +559,10 @@ export function FlightDetailModal({ flightId, open, onOpenChange, onDelete, onUp
                           <FormControl>
                             <AirportSelect
                               value={field.value}
-                              onChange={(val, name) => {
-                                field.onChange(val)
-                                setArrAirportName(name)
-                              }}
+                              onChange={field.onChange}
                               placeholder="Select arrival..."
                             />
                           </FormControl>
-                          {arrAirportName && (
-                            <p className="text-sm text-muted-foreground">
-                              {arrAirportName}
-                              {arrAirportIata && <span> ({arrAirportIata})</span>}
-                            </p>
-                          )}
                           <FormMessage />
                         </FormItem>
                       )}
