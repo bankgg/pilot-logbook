@@ -1,22 +1,34 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { Plane, Calendar, Clock, PlaneTakeoff, PlaneLanding, Timer } from 'lucide-react'
+import { Plane, Calendar, Clock, PlaneTakeoff, PlaneLanding, Timer, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from '@/components/ui/dialog'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Card } from '@/components/ui/card'
-import { getFlightById } from '@/lib/actions/flights'
+import { getFlightById, deleteFlight } from '@/lib/actions/flights'
 import type { Flight } from '@/types/supabase'
 
 interface FlightDetailModalProps {
   flightId: string | null
   open: boolean
   onOpenChange: (open: boolean) => void
+  onDelete?: () => void
 }
 
 // In-memory cache for flight data
@@ -73,10 +85,12 @@ export function preloadFlightDataMultiple(flightIds: string[]) {
   flightIds.forEach(id => preloadFlightData(id))
 }
 
-export function FlightDetailModal({ flightId, open, onOpenChange }: FlightDetailModalProps) {
+export function FlightDetailModal({ flightId, open, onOpenChange, onDelete }: FlightDetailModalProps) {
   const [flight, setFlight] = useState<Flight | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const currentFlightIdRef = useRef<string | null>(null)
 
   // Fetch flight data when modal opens or flightId changes
@@ -138,6 +152,26 @@ export function FlightDetailModal({ flightId, open, onOpenChange }: FlightDetail
     })
   }, [flightId, flight])
 
+  const handleDelete = async () => {
+    if (!flightId) return
+
+    setDeleting(true)
+    const result = await deleteFlight(flightId)
+
+    setDeleting(false)
+    setDeleteDialogOpen(false)
+
+    if (result.success) {
+      // Clear the cache for this flight
+      flightCache.delete(flightId)
+      // Close the modal and notify parent
+      onOpenChange(false)
+      onDelete?.()
+    } else {
+      setError(result.error || 'Failed to delete flight')
+    }
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -169,11 +203,15 @@ export function FlightDetailModal({ flightId, open, onOpenChange }: FlightDetail
                   )}
                 </div>
                 <div className="grid grid-cols-2 gap-4 mt-3 text-sm">
-                  <div className="flex items-center gap-2">
-                    <Plane className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">Aircraft:</span>
-                    <span className="font-semibold">{flight.aircraft_type}</span>
-                    <span className="text-muted-foreground">({flight.aircraft_reg})</span>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <Plane className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-muted-foreground">Aircraft:</span>
+                      <span className="font-semibold">{flight.aircraft_type}</span>
+                    </div>
+                    <div className="ml-6 mt-0.5 text-xs text-muted-foreground">
+                      ({flight.aircraft_reg})
+                    </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -269,7 +307,47 @@ export function FlightDetailModal({ flightId, open, onOpenChange }: FlightDetail
               )}
             </div>
         ) : null}
+
+        {/* Footer with Delete button */}
+        {flight && (
+          <DialogFooter>
+            <Button
+              variant="destructive"
+              onClick={() => setDeleteDialogOpen(true)}
+              disabled={deleting}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete Flight
+            </Button>
+          </DialogFooter>
+        )}
       </DialogContent>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Flight Record?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this flight from {flight?.dep_airport} to {flight?.arr_airport}?
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault()
+                handleDelete()
+              }}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   )
 }

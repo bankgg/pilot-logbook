@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, memo } from 'react'
 import { StatsFilter } from '@/components/stats-filter'
 import { Card, CardContent } from '@/components/ui/card'
 import { Plane, Clock, MapPin, Sun, Moon } from 'lucide-react'
@@ -20,7 +20,7 @@ interface StatsSectionProps {
 
 type DateFilterType = 'all' | 'month' | 'range'
 
-function StatCard({
+const StatCard = memo(function StatCard({
   title,
   value,
   icon,
@@ -42,13 +42,13 @@ function StatCard({
       </CardContent>
     </Card>
   )
-}
+})
 
 export function StatsSection({ initialStats }: StatsSectionProps) {
   const [stats, setStats] = useState<StatsData>(initialStats)
   const [isPending, startTransition] = useTransition()
 
-  const handleFilterChange = async (type: DateFilterType, startDate?: string, endDate?: string) => {
+  const handleFilterChange = async (_type: DateFilterType, startDate?: string, endDate?: string) => {
     startTransition(async () => {
       const result = await getFlightStats(startDate, endDate)
       if (result.success && result.data) {

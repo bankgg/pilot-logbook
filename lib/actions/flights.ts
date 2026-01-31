@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { cache } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import { z } from 'zod'
 import type { Flight, FlightPath, Airport, Database } from '@/types/supabase'
@@ -36,6 +37,19 @@ export type LogFlightInput = z.infer<typeof LogFlightSchema>
 // ============================================
 
 /**
+ * Cached function to get authenticated user
+ * Uses React.cache() to deduplicate multiple calls in the same request
+ */
+const getAuthenticatedUser = cache(async () => {
+  const supabase = await createClient()
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  if (userError || !user) {
+    return null
+  }
+  return user
+})
+
+/**
  * Calculate duration in minutes between two timestamps
  */
 function calculateDuration(start: string | null, end: string | null): number | null {
@@ -60,13 +74,13 @@ export async function logFlight(input: LogFlightInput) {
   // Validate input
   const validated = LogFlightSchema.parse(input)
 
-  // Get the current user
-  const supabase = await createClient()
-  const { data: { user }, error: userError } = await supabase.auth.getUser()
-
-  if (userError || !user) {
+  // Get the current user (cached)
+  const user = await getAuthenticatedUser()
+  if (!user) {
     return { success: false, error: 'Authentication required' }
   }
+
+  const supabase = await createClient()
 
   // Calculate durations
   const duration_block = calculateDuration(
@@ -114,12 +128,12 @@ export async function logFlight(input: LogFlightInput) {
  * Get all flights for the current user
  */
 export async function getFlights(): Promise<{ success: boolean; data?: Flight[]; error?: string }> {
-  const supabase = await createClient()
-  const { data: { user }, error: userError } = await supabase.auth.getUser()
-
-  if (userError || !user) {
+  const user = await getAuthenticatedUser()
+  if (!user) {
     return { success: false, error: 'Authentication required' }
   }
+
+  const supabase = await createClient()
 
   const { data, error } = await supabase
     .from('flights')
@@ -143,12 +157,12 @@ export async function getFlightPaths(): Promise<{
   data?: FlightPath[]
   error?: string
 }> {
-  const supabase = await createClient()
-  const { data: { user }, error: userError } = await supabase.auth.getUser()
-
-  if (userError || !user) {
+  const user = await getAuthenticatedUser()
+  if (!user) {
     return { success: false, error: 'Authentication required' }
   }
+
+  const supabase = await createClient()
 
   // Query the flight_paths view which includes airport coordinates
   const { data, error } = await supabase
@@ -226,12 +240,12 @@ export async function deleteFlight(flightId: string): Promise<{
   success: boolean
   error?: string
 }> {
-  const supabase = await createClient()
-  const { data: { user }, error: userError } = await supabase.auth.getUser()
-
-  if (userError || !user) {
+  const user = await getAuthenticatedUser()
+  if (!user) {
     return { success: false, error: 'Authentication required' }
   }
+
+  const supabase = await createClient()
 
   const { error } = await supabase
     .from('flights')
@@ -255,12 +269,12 @@ export async function getFlightById(flightId: string): Promise<{
   data?: Flight
   error?: string
 }> {
-  const supabase = await createClient()
-  const { data: { user }, error: userError } = await supabase.auth.getUser()
-
-  if (userError || !user) {
+  const user = await getAuthenticatedUser()
+  if (!user) {
     return { success: false, error: 'Authentication required' }
   }
+
+  const supabase = await createClient()
 
   const { data, error } = await supabase
     .from('flights')
@@ -293,37 +307,55 @@ export async function getFilteredFlights(filters?: {
   depAirport?: string
   arrAirport?: string
 }): Promise<{ success: boolean; data?: Flight[]; error?: string }> {
-  const supabase = await createClient()
-  const { data: { user }, error: userError } = await supabase.auth.getUser()
-
-  if (userError || !user) {
+  const user = await getAuthenticatedUser()
+  if (!user) {
     return { success: false, error: 'Authentication required' }
   }
 
-  let query = (supabase
-    .from('flights') as any)
-    .select('*')
-    .eq('user_id', user.id)
+  const supabase = await createClient()
+
+  // Build filters array for Supabase
+  const dbFilters: any[] = []
+
+  // Always filter by user_id
+  dbFilters.push({ column: 'user_id', value: user.id, operator: 'eq' })
 
   // Apply filters if provided
   if (filters) {
     if (filters.startDate) {
-      query = query.gte('created_at', filters.startDate)
+      dbFilters.push({ column: 'created_at', value: filters.startDate, operator: 'gte' })
     }
     if (filters.endDate) {
-      query = query.lte('created_at', filters.endDate)
+      dbFilters.push({ column: 'created_at', value: filters.endDate, operator: 'lte' })
     }
     if (filters.aircraftType) {
-      query = query.ilike('aircraft_type', filters.aircraftType)
+      dbFilters.push({ column: 'aircraft_type', value: filters.aircraftType, operator: 'ilike' })
     }
     if (filters.aircraftReg) {
-      query = query.ilike('aircraft_reg', filters.aircraftReg)
+      dbFilters.push({ column: 'aircraft_reg', value: filters.aircraftReg, operator: 'ilike' })
     }
     if (filters.depAirport) {
-      query = query.eq('dep_airport', filters.depAirport.toUpperCase())
+      dbFilters.push({ column: 'dep_airport', value: filters.depAirport.toUpperCase(), operator: 'eq' })
     }
     if (filters.arrAirport) {
-      query = query.eq('arr_airport', filters.arrAirport.toUpperCase())
+      dbFilters.push({ column: 'arr_airport', value: filters.arrAirport.toUpperCase(), operator: 'eq' })
+    }
+  }
+
+  // Build the query with all filters
+  let query = (supabase
+    .from('flights') as any)
+    .select('*')
+
+  for (const filter of dbFilters) {
+    if (filter.operator === 'eq') {
+      query = query.eq(filter.column, filter.value)
+    } else if (filter.operator === 'ilike') {
+      query = query.ilike(filter.column, filter.value)
+    } else if (filter.operator === 'gte') {
+      query = query.gte(filter.column, filter.value)
+    } else if (filter.operator === 'lte') {
+      query = query.lte(filter.column, filter.value)
     }
   }
 
@@ -352,12 +384,12 @@ export async function getFlightStats(startDate?: string, endDate?: string): Prom
   }
   error?: string
 }> {
-  const supabase = await createClient()
-  const { data: { user }, error: userError } = await supabase.auth.getUser()
-
-  if (userError || !user) {
+  const user = await getAuthenticatedUser()
+  if (!user) {
     return { success: false, error: 'Authentication required' }
   }
+
+  const supabase = await createClient()
 
   let query = (supabase
     .from('flights') as any)

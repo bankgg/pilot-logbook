@@ -8,11 +8,12 @@ import type { Flight } from '@/types/supabase'
 
 interface FlightsListProps {
   flights: Flight[]
+  onDelete?: () => void
 }
 
 const ITEMS_PER_PAGE = 20
 
-export function FlightsList({ flights }: FlightsListProps) {
+export function FlightsList({ flights, onDelete }: FlightsListProps) {
   const [selectedFlightId, setSelectedFlightId] = useState<string | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
@@ -185,6 +186,7 @@ export function FlightsList({ flights }: FlightsListProps) {
         flightId={selectedFlightId}
         open={modalOpen}
         onOpenChange={setModalOpen}
+        onDelete={onDelete}
       />
     </>
   )

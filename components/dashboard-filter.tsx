@@ -59,25 +59,25 @@ export function DashboardFilter({
   const [arrAirport, setArrAirport] = useState<string>('__all__')
   const [isTransition, startTransition] = useTransition()
 
-  // Apply all filters
-  const applyFilters = () => {
+  // Apply all filters - uses closure values instead of refs
+  const applyFilters = (currentDateFilter: DateFilterType, currentDateRange: typeof dateRange, currentType: string, currentReg: string, currentDep: string, currentArr: string) => {
     const filters: DashboardFilters = {
-      dateFilter,
-      aircraftType: aircraftType === '__all__' ? undefined : aircraftType,
-      aircraftReg: aircraftReg === '__all__' ? undefined : aircraftReg,
-      depAirport: depAirport === '__all__' ? undefined : depAirport,
-      arrAirport: arrAirport === '__all__' ? undefined : arrAirport,
+      dateFilter: currentDateFilter,
+      aircraftType: currentType === '__all__' ? undefined : currentType,
+      aircraftReg: currentReg === '__all__' ? undefined : currentReg,
+      depAirport: currentDep === '__all__' ? undefined : currentDep,
+      arrAirport: currentArr === '__all__' ? undefined : currentArr,
     }
 
-    if (dateFilter === 'month') {
+    if (currentDateFilter === 'month') {
       const now = new Date()
       filters.startDate = startOfMonth(now).toISOString()
       filters.endDate = endOfMonth(now).toISOString()
-    } else if (dateFilter === 'range' && dateRange.from) {
-      filters.startDate = startOfDay(dateRange.from).toISOString()
-      filters.endDate = dateRange.to
-        ? endOfDay(dateRange.to).toISOString()
-        : endOfDay(dateRange.from).toISOString()
+    } else if (currentDateFilter === 'range' && currentDateRange.from) {
+      filters.startDate = startOfDay(currentDateRange.from).toISOString()
+      filters.endDate = currentDateRange.to
+        ? endOfDay(currentDateRange.to).toISOString()
+        : endOfDay(currentDateRange.from).toISOString()
     }
 
     onFilterChange(filters)
@@ -86,12 +86,16 @@ export function DashboardFilter({
   // Handle date filter type change
   const handleDateFilterChange = (type: DateFilterType) => {
     setDateFilter(type)
+    const newDateRange = type === 'month'
+      ? { from: startOfMonth(new Date()), to: endOfMonth(new Date()) }
+      : dateRange
+
     if (type === 'month') {
-      const now = new Date()
-      setDateRange({ from: startOfMonth(now), to: endOfMonth(now) })
+      setDateRange(newDateRange)
     }
+
     startTransition(() => {
-      setTimeout(applyFilters, 0)
+      setTimeout(() => applyFilters(type, newDateRange, aircraftType, aircraftReg, depAirport, arrAirport), 0)
     })
   }
 
@@ -112,15 +116,7 @@ export function DashboardFilter({
 
     startTransition(() => {
       setTimeout(() => {
-        onFilterChange({
-          dateFilter: 'range',
-          startDate: startOfDay(newRange.from).toISOString(),
-          endDate: endOfDay(newRange.to || newRange.from).toISOString(),
-          aircraftType: aircraftType === '__all__' ? undefined : aircraftType,
-          aircraftReg: aircraftReg === '__all__' ? undefined : aircraftReg,
-          depAirport: depAirport === '__all__' ? undefined : depAirport,
-          arrAirport: arrAirport === '__all__' ? undefined : arrAirport,
-        })
+        applyFilters('range', newRange, aircraftType, aircraftReg, depAirport, arrAirport)
       }, 0)
     })
   }
@@ -256,7 +252,7 @@ export function DashboardFilter({
                 onValueChange={(value) => {
                   setAircraftType(value)
                   startTransition(() => {
-                    setTimeout(applyFilters, 0)
+                    setTimeout(() => applyFilters(dateFilter, dateRange, value, aircraftReg, depAirport, arrAirport), 0)
                   })
                 }}
               >
@@ -299,7 +295,7 @@ export function DashboardFilter({
                 onValueChange={(value) => {
                   setAircraftReg(value)
                   startTransition(() => {
-                    setTimeout(applyFilters, 0)
+                    setTimeout(() => applyFilters(dateFilter, dateRange, aircraftType, value, depAirport, arrAirport), 0)
                   })
                 }}
               >
@@ -342,7 +338,7 @@ export function DashboardFilter({
                 onValueChange={(value) => {
                   setDepAirport(value)
                   startTransition(() => {
-                    setTimeout(applyFilters, 0)
+                    setTimeout(() => applyFilters(dateFilter, dateRange, aircraftType, aircraftReg, value, arrAirport), 0)
                   })
                 }}
               >
@@ -386,7 +382,7 @@ export function DashboardFilter({
                 onValueChange={(value) => {
                   setArrAirport(value)
                   startTransition(() => {
-                    setTimeout(applyFilters, 0)
+                    setTimeout(() => applyFilters(dateFilter, dateRange, aircraftType, aircraftReg, depAirport, value), 0)
                   })
                 }}
               >
