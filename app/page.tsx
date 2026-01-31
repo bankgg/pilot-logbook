@@ -2,6 +2,7 @@ import { FlightForm } from '@/components/flight-form'
 import { FlightMapWrapper } from '@/components/flight-map-wrapper'
 import { AuthSignIn } from '@/components/auth-signin'
 import { StatsSection } from '@/components/stats-section'
+import { RecentFlights } from '@/components/recent-flights'
 import { getFlightPaths, getFlightStats } from '@/lib/actions/flights'
 import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -90,43 +91,7 @@ export default async function HomePage() {
               </Button>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {flightPaths.slice(0, 10).map((flight) => (
-                  <Link
-                    key={flight.id}
-                    href={`/dashboard/${flight.id}`}
-                    className="block hover:bg-muted/50 rounded transition-colors -mx-2 px-2 py-2"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold">{flight.dep_airport}</span>
-                          <span className="text-muted-foreground">→</span>
-                          <span className="font-semibold">{flight.arr_airport}</span>
-                          {flight.flight_number && (
-                            <span className="text-sm text-muted-foreground">
-                              ({flight.flight_number})
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {flight.aircraft_type} - {flight.aircraft_reg}
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        {flight.duration_flight && (
-                          <div className="text-sm font-medium">
-                            {Math.floor(flight.duration_flight / 60)}h {flight.duration_flight % 60}m
-                          </div>
-                        )}
-                        <div className="text-xs text-muted-foreground">
-                          {flight.day_landings + flight.night_landings} landing(s)
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
+              <RecentFlights flights={flightPaths.slice(0, 10)} />
             </CardContent>
           </Card>
         )}

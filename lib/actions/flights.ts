@@ -277,6 +277,66 @@ export async function getFlightById(flightId: string): Promise<{
 }
 
 /**
+ * Get flights with optional filters for the dashboard
+ * @param startDate - Optional start date (ISO string) for filtering
+ * @param endDate - Optional end date (ISO string) for filtering
+ * @param aircraftType - Optional aircraft type filter
+ * @param aircraftReg - Optional aircraft registration filter
+ * @param depAirport - Optional departure airport filter
+ * @param arrAirport - Optional arrival airport filter
+ */
+export async function getFilteredFlights(filters?: {
+  startDate?: string
+  endDate?: string
+  aircraftType?: string
+  aircraftReg?: string
+  depAirport?: string
+  arrAirport?: string
+}): Promise<{ success: boolean; data?: Flight[]; error?: string }> {
+  const supabase = await createClient()
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+
+  if (userError || !user) {
+    return { success: false, error: 'Authentication required' }
+  }
+
+  let query = (supabase
+    .from('flights') as any)
+    .select('*')
+    .eq('user_id', user.id)
+
+  // Apply filters if provided
+  if (filters) {
+    if (filters.startDate) {
+      query = query.gte('created_at', filters.startDate)
+    }
+    if (filters.endDate) {
+      query = query.lte('created_at', filters.endDate)
+    }
+    if (filters.aircraftType) {
+      query = query.ilike('aircraft_type', filters.aircraftType)
+    }
+    if (filters.aircraftReg) {
+      query = query.ilike('aircraft_reg', filters.aircraftReg)
+    }
+    if (filters.depAirport) {
+      query = query.eq('dep_airport', filters.depAirport.toUpperCase())
+    }
+    if (filters.arrAirport) {
+      query = query.eq('arr_airport', filters.arrAirport.toUpperCase())
+    }
+  }
+
+  const { data, error } = await query.order('created_at', { ascending: false })
+
+  if (error) {
+    return { success: false, error: error.message }
+  }
+
+  return { success: true, data }
+}
+
+/**
  * Get flight statistics for the current user
  * @param startDate - Optional start date (ISO string) for filtering
  * @param endDate - Optional end date (ISO string) for filtering

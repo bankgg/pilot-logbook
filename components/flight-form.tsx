@@ -119,7 +119,7 @@ export function FlightForm() {
                 <FormItem>
                   <FormLabel>Flight Number</FormLabel>
                   <FormControl>
-                    <Input placeholder="UA1234" {...field} />
+                    <Input placeholder="TG413" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -135,7 +135,7 @@ export function FlightForm() {
                   <FormItem>
                     <FormLabel>Aircraft Registration</FormLabel>
                     <FormControl>
-                      <Input placeholder="N12345" {...field} />
+                      <Input placeholder="HS-TOA" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -148,7 +148,7 @@ export function FlightForm() {
                   <FormItem>
                     <FormLabel>Aircraft Type</FormLabel>
                     <FormControl>
-                      <Input placeholder="B737" {...field} />
+                      <Input placeholder="A320" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -245,9 +245,18 @@ export function FlightForm() {
                     <FormControl>
                       <Input
                         type="number"
+                        inputMode="numeric"
                         min={0}
+                        max={9}
                         {...field}
-                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                        onFocus={(e) => e.target.select()}
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value) || 0
+                          field.onChange(value)
+                          if (e.target.value.length >= 1) {
+                            e.target.blur()
+                          }
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
@@ -263,9 +272,18 @@ export function FlightForm() {
                     <FormControl>
                       <Input
                         type="number"
+                        inputMode="numeric"
                         min={0}
+                        max={9}
                         {...field}
-                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                        onFocus={(e) => e.target.select()}
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value) || 0
+                          field.onChange(value)
+                          if (e.target.value.length >= 1) {
+                            e.target.blur()
+                          }
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
