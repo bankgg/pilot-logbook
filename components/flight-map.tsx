@@ -175,6 +175,8 @@ export function FlightMap({ flightPaths, className }: FlightMapProps) {
         zoom={defaultZoom}
         className="h-full w-full rounded-lg overflow-hidden"
         scrollWheelZoom={true}
+        touchZoom={true}
+        dragging={false}
       >
         <LeafletIconConfig />
         <TileLayer

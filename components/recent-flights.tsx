@@ -39,7 +39,7 @@ export function RecentFlights({ flights }: RecentFlightsProps) {
               <div className="flex-1">
                 <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
                   <Calendar className="h-3 w-3" />
-                  {new Date(flight.created_at).toLocaleDateString()}
+                  {new Date(flight.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' })}
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="font-semibold">{flight.dep_airport}</span>

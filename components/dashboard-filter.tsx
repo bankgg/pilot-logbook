@@ -137,11 +137,11 @@ export function DashboardFilter({
       case 'all':
         return 'All Time'
       case 'month':
-        return format(new Date(), 'MMMM yyyy')
+        return format(new Date(), 'MMM yy')
       case 'range':
         if (!dateRange.from) return 'Select dates'
-        if (!dateRange.to) return format(dateRange.from, 'MMM dd, yyyy')
-        return `${format(dateRange.from, 'MMM dd')} - ${format(dateRange.to, 'MMM dd, yyyy')}`
+        if (!dateRange.to) return format(dateRange.from, 'd MMM yy')
+        return `${format(dateRange.from, 'd MMM')} - ${format(dateRange.to, 'd MMM yy')}`
     }
   }
 

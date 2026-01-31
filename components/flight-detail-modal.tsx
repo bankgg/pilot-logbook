@@ -39,13 +39,17 @@ const CACHE_TTL = 5 * 60 * 1000 // 5 minutes
 function formatDateTime(dateStr: string | null): string {
   if (!dateStr) return '-'
   const date = new Date(dateStr)
-  return date.toLocaleString('en-US', {
-    month: 'short',
+  const datePart = date.toLocaleDateString('en-GB', {
     day: 'numeric',
+    month: 'short',
+    year: '2-digit',
+  })
+  const timePart = date.toLocaleTimeString('en-US', {
     hour: '2-digit',
     minute: '2-digit',
     hour12: true,
   })
+  return `${datePart}, ${timePart}`
 }
 
 function formatDuration(minutes: number | null): string {
@@ -216,7 +220,7 @@ export function FlightDetailModal({ flightId, open, onOpenChange, onDelete }: Fl
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
                     <span className="text-muted-foreground">Date:</span>
-                    <span className="font-semibold">{new Date(flight.created_at).toLocaleDateString()}</span>
+                    <span className="font-semibold">{new Date(flight.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' })}</span>
                   </div>
                 </div>
               </Card>

@@ -73,7 +73,7 @@ export function FlightsList({ flights, onDelete }: FlightsListProps) {
                 <td className="p-3 whitespace-nowrap">
                   <div className="flex items-center gap-2">
                     <Calendar className="h-3 w-3 text-muted-foreground" />
-                    {new Date(flight.created_at).toLocaleDateString()}
+                    {new Date(flight.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' })}
                   </div>
                 </td>
                 <td className="p-3">
