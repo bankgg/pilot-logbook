@@ -47,7 +47,7 @@ export default async function HomePage() {
         <div className="container mx-auto px-3 py-3 flex items-center justify-between">
           <h1 className="text-lg sm:text-2xl font-bold flex items-center gap-2">
             <Plane className="h-5 w-5 sm:h-6 sm:w-6" />
-            <span className="truncate">PilotLog</span>
+            <span className="truncate">GG Log</span>
           </h1>
           <div className="flex items-center gap-1 shrink-0">
             <ThemeToggle />

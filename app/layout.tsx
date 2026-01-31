@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PilotLog - Flight Logbook",
+  title: "GG Log - Flight Logbook",
   description: "A mobile-first personal flight logbook with map visualization",
 };
 

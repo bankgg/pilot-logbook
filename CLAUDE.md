@@ -13,7 +13,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Architecture Overview
 
-**PilotLog** is a mobile-first flight logbook application built with Next.js 16 App Router and Supabase.
+**GG Log** is a mobile-first flight logbook application built with Next.js 16 App Router and Supabase.
 
 ### Tech Stack
 - **Framework:** Next.js 16 with App Router (React Server Components by default)

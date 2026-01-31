@@ -44,7 +44,7 @@ export function AuthSignIn() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Sign In</CardTitle>
-          <CardDescription>Sign in to access PilotLog</CardDescription>
+          <CardDescription>Sign in to access GG Log</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSignIn} className="space-y-4">
